@@ -1,24 +1,18 @@
 const db = require('../db');
 
-// ─────────────────────────────────────────
-// CREATE POST
-// ─────────────────────────────────────────
 async function createPost(req, res) {
   try {
     const { content } = req.body;
     const userId      = req.user.id;
 
-    if (!content?.trim()) {
+    if (!content || !content.trim()) {
       return res.status(400).json({ error: 'Post content is required' });
     }
     if (content.trim().length > 500) {
       return res.status(400).json({ error: 'Post must be 500 characters or less' });
     }
 
-    // If an image was uploaded, save the path
     const imageUrl = req.file ? req.file.path : '';
-      ? `/uploads/${req.file.filename}`
-      : '';
 
     const result = await db.query(
       `INSERT INTO posts (user_id, content, image_url)
@@ -27,7 +21,6 @@ async function createPost(req, res) {
       [userId, content.trim(), imageUrl]
     );
 
-    // Fetch the post with author details to return to client
     const postResult = await db.query(
       `SELECT p.*, u.username, u.avatar_url,
               0 AS like_count,
@@ -45,13 +38,10 @@ async function createPost(req, res) {
   }
 }
 
-// ─────────────────────────────────────────
-// GET SINGLE POST
-// ─────────────────────────────────────────
 async function getPost(req, res) {
   try {
-    const { id }   = req.params;
-    const userId   = req.user.id;
+    const { id } = req.params;
+    const userId = req.user.id;
 
     const result = await db.query(
       `SELECT p.*, u.username, u.avatar_url,
@@ -75,9 +65,6 @@ async function getPost(req, res) {
   }
 }
 
-// ─────────────────────────────────────────
-// DELETE POST
-// ─────────────────────────────────────────
 async function deletePost(req, res) {
   try {
     const { id } = req.params;
@@ -98,35 +85,28 @@ async function deletePost(req, res) {
   }
 }
 
-// ─────────────────────────────────────────
-// TOGGLE LIKE
-// ─────────────────────────────────────────
 async function toggleLike(req, res) {
   try {
-    const { id } = req.params; // post id
+    const { id } = req.params;
     const userId = req.user.id;
 
-    // Check if already liked
     const existing = await db.query(
       'SELECT id FROM likes WHERE user_id = $1 AND post_id = $2',
       [userId, id]
     );
 
     if (existing.rows.length > 0) {
-      // Unlike
       await db.query(
         'DELETE FROM likes WHERE user_id = $1 AND post_id = $2',
         [userId, id]
       );
     } else {
-      // Like
       await db.query(
         'INSERT INTO likes (user_id, post_id) VALUES ($1, $2)',
         [userId, id]
       );
     }
 
-    // Return updated like count
     const countResult = await db.query(
       'SELECT COUNT(*)::int AS like_count FROM likes WHERE post_id = $1',
       [id]
