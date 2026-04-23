@@ -16,7 +16,7 @@ async function createPost(req, res) {
     }
 
     // If an image was uploaded, save the path
-    const imageUrl = req.file
+    const imageUrl = req.file ? req.file.path : '';
       ? `/uploads/${req.file.filename}`
       : '';
 

@@ -4,7 +4,7 @@ import { useAuth }  from '../context/AuthContext';
 import Avatar       from './Avatar';
 import api          from '../api';
 
-const SERVER = 'http://localhost:5000';
+const SERVER = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function timeAgo(iso) {
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);

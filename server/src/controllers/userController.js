@@ -57,7 +57,7 @@ async function updateProfile(req, res) {
   try {
     const userId      = req.user.id;
     const { bio }     = req.body;
-    const avatarUrl   = req.file ? `/uploads/${req.file.filename}` : null;
+    const avatarUrl = req.file ? req.file.path : null;
 
     const updates = [];
     const values  = [];
