@@ -65,6 +65,13 @@ export default function Login() {
               {error}
             </p>
           )}
+
+          <p style={{ textAlign: 'right', fontSize: 13, marginBottom: 12 }}>
+            <Link to="/forgot-password" style={{ color: 'var(--accent)' }}>
+            Forgot password?
+          </Link>
+          </p>
+
           <button type="submit" disabled={loading} style={{
             width: '100%', background: 'var(--accent)',
             color: '#fff', border: 'none', borderRadius: 8,

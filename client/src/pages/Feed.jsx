@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import PostCard  from '../components/PostCard';
-import PostForm  from '../components/PostForm';
-import api       from '../api';
+import { useState, useEffect, useCallback } from 'react';
+import PostCard          from '../components/PostCard';
+import PostForm          from '../components/PostForm';
+import SuggestedAccounts from '../components/SuggestedAccounts';
+import api               from '../api';
 
 export default function Feed() {
   const [posts,   setPosts]   = useState([]);
@@ -9,11 +10,7 @@ export default function Feed() {
   const [page,    setPage]    = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    loadFeed(1);
-  }, []);
-
-  async function loadFeed(pageNum) {
+  const loadFeed = useCallback(async (pageNum) => {
     try {
       const res = await api.get(`/users/feed?page=${pageNum}`);
       if (pageNum === 1) {
@@ -28,7 +25,9 @@ export default function Feed() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => { loadFeed(1); }, [loadFeed]);
 
   function handleNewPost(post) {
     setPosts(prev => [post, ...prev]);
@@ -36,6 +35,12 @@ export default function Feed() {
 
   function handleDelete(postId) {
     setPosts(prev => prev.filter(p => p.id !== postId));
+  }
+
+  // Reload feed after following a suggestion
+  function handleFollow() {
+    setLoading(true);
+    loadFeed(1);
   }
 
   return (
@@ -47,17 +52,24 @@ export default function Feed() {
           Loading feed...
         </p>
       ) : posts.length === 0 ? (
-        <div style={{
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)', padding: '2rem', textAlign: 'center'
-        }}>
-          <p style={{ color: 'var(--text2)', marginBottom: 8 }}>
-            Your feed is empty.
-          </p>
-          <p style={{ color: 'var(--text2)', fontSize: 14 }}>
-            Follow some users from the Explore page to see their posts here.
-          </p>
-        </div>
+        <>
+          <SuggestedAccounts onFollow={handleFollow} />
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            padding: '2rem', textAlign: 'center',
+            boxShadow: 'var(--shadow)'
+          }}>
+            <p style={{ fontSize: '1.5rem', marginBottom: 8 }}>👋</p>
+            <p style={{ color: 'var(--text)', fontWeight: 600, marginBottom: 4 }}>
+              Your feed is empty
+            </p>
+            <p style={{ color: 'var(--text2)', fontSize: 14 }}>
+              Follow some accounts above to see their posts here.
+            </p>
+          </div>
+        </>
       ) : (
         <>
           {posts.map(post => (
@@ -70,7 +82,8 @@ export default function Feed() {
                 width: '100%', background: 'var(--surface)',
                 border: '1px solid var(--border)', borderRadius: 8,
                 padding: '0.75rem', color: 'var(--accent)',
-                fontSize: 14, fontWeight: 500, marginTop: 8
+                fontSize: 14, fontWeight: 500, marginTop: 8,
+                cursor: 'pointer'
               }}
             >
               Load more

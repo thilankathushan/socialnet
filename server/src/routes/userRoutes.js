@@ -9,7 +9,11 @@ router.get('/search',              protect, searchUsers);
 router.get('/feed',                protect, getFeed);
 router.get('/explore',             protect, getExplore);
 router.get('/:username',           protect, getProfile);
+router.get('/suggestions',          protect, getSuggestions);
 router.patch('/me/profile',        protect, upload.single('avatar'), updateProfile);
 router.post('/:username/follow',   protect, toggleFollow);
+router.patch('/me/account',         protect, updateAccount);
+router.patch('/me/password',        protect, changePassword);
+router.delete('/me',                protect, deleteAccount);
 
 module.exports = router;

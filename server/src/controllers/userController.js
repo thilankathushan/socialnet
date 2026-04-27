@@ -1,4 +1,5 @@
-const db = require('../db');
+const bcrypt = require('bcryptjs');
+const db     = require('../db');
 
 // ─────────────────────────────────────────
 // GET USER PROFILE
@@ -91,6 +92,91 @@ async function updateProfile(req, res) {
   }
 }
 
+  async function updateAccount(req, res) {
+    try {
+      const userId = req.user.id;
+      const { username, email } = req.body;
+
+      if (!username || !email) {
+        return res.status(400).json({ error: 'Username and email required' });
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return res.status(400).json({ error: 'Username can only contain letters, numbers and underscores' });
+      }
+
+      // Check if username taken by someone else
+      const existingUser = await db.query(
+        'SELECT id FROM users WHERE username = $1 AND id != $2',
+        [username.toLowerCase(), userId]
+      );
+      if (existingUser.rows.length > 0) {
+        return res.status(409).json({ error: 'Username already taken' });
+      }
+
+      // Check if email taken by someone else
+      const existingEmail = await db.query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        [email.toLowerCase(), userId]
+      );
+      if (existingEmail.rows.length > 0) {
+        return res.status(409).json({ error: 'Email already in use' });
+      }
+
+      const result = await db.query(
+        `UPDATE users SET username = $1, email = $2
+        WHERE id = $3
+        RETURNING id, username, email, bio, avatar_url`,
+        [username.toLowerCase(), email.toLowerCase(), userId]
+      );
+
+      res.json({ user: result.rows[0] });
+    } catch (error) {
+      console.error('Update account error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+
+  async function changePassword(req, res) {
+    try {
+      const userId = req.user.id;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Both passwords required' });
+      }
+      if (newPassword.length < 8) {
+        return res.status(400).json({ error: 'New password must be at least 8 characters' });
+      }
+
+      const result = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+      const user   = result.rows[0];
+
+      const match = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!match) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+
+      const newHash = await bcrypt.hash(newPassword, 12);
+      await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, userId]);
+
+      res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+
+  async function deleteAccount(req, res) {
+    try {
+      const userId = req.user.id;
+      await db.query('DELETE FROM users WHERE id = $1', [userId]);
+      res.json({ message: 'Account deleted' });
+    } catch (error) {
+      console.error('Delete account error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+
 // ─────────────────────────────────────────
 // TOGGLE FOLLOW
 // ─────────────────────────────────────────
@@ -168,4 +254,40 @@ async function searchUsers(req, res) {
   }
 }
 
-module.exports = { getProfile, updateProfile, toggleFollow, searchUsers };
+// -----------------------------------
+// GET SUGGESTIONS
+// -----------------------------------
+
+async function getSuggestions(req, res) {
+  try {
+    const userId = req.user.id;
+
+    // Get users the current user doesn't follow yet
+    // excluding themselves, ordered by most followers
+    const result = await db.query(
+      `SELECT u.id, u.username, u.bio, u.avatar_url,
+              COUNT(DISTINCT f.id)::int AS followers_count,
+              false AS is_following
+       FROM users u
+       LEFT JOIN follows f ON u.id = f.following_id
+       WHERE u.id != $1
+       AND u.id NOT IN (
+         SELECT following_id FROM follows WHERE follower_id = $1
+       )
+       GROUP BY u.id
+       ORDER BY followers_count DESC
+       LIMIT 5`,
+      [userId]
+    );
+
+    res.json({ users: result.rows });
+  } catch (error) {
+    console.error('Suggestions error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+module.exports = {
+  getProfile, updateProfile, toggleFollow, searchUsers,
+  updateAccount, changePassword, deleteAccount, getSuggestions
+};

@@ -7,11 +7,18 @@ import api          from '../api';
 const SERVER = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function timeAgo(iso) {
-  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  const now  = Date.now();
+  const then = new Date(iso).getTime();
+  const diff = Math.floor((now - then) / 1000);
+
+  // If diff is negative (clock skew), show 'just now'
+  if (diff <= 0)    return 'just now';
   if (diff < 60)    return `${diff}s`;
-  if (diff < 3600)  return `${Math.floor(diff/60)}m`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}h`;
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric'
+  });
 }
 
 export default function PostCard({ post, onDelete }) {
