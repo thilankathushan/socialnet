@@ -1,16 +1,14 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
-const path    = require('path');
 
 const authRoutes = require('./routes/authRoutes');
 const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
+const botRoutes  = require('./routes/botRoutes');
+
 const app  = express();
 const PORT = process.env.PORT || 5000;
-const botRoutes = require('./routes/botRoutes');
-
-app.use('/api/bot', botRoutes);
 
 app.use(cors({
   origin: function(origin, callback) {
@@ -27,11 +25,13 @@ app.use(cors({
   },
   credentials: true
 }));
+
 app.use(express.json());
 
 app.use('/api/auth',  authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/bot',   botRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server running' });
