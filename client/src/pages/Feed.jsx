@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import PostCard          from '../components/PostCard';
-import PostForm          from '../components/PostForm';
-import SuggestedAccounts from '../components/SuggestedAccounts';
-import api               from '../api';
+import PostCard           from '../components/PostCard';
+import PostForm           from '../components/PostForm';
+import SuggestedAccounts  from '../components/SuggestedAccounts';
+import api                from '../api';
 
 export default function Feed() {
   const [posts,   setPosts]   = useState([]);
@@ -37,23 +37,29 @@ export default function Feed() {
     setPosts(prev => prev.filter(p => p.id !== postId));
   }
 
-  // Reload feed after following a suggestion
   function handleFollow() {
-    setLoading(true);
     loadFeed(1);
   }
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', padding: '1.5rem 1rem' }}>
-      <PostForm onPost={handleNewPost} />
+    <div style={{
+      maxWidth: 1000, margin: '0 auto',
+      padding: '1.5rem 1rem',
+      display: 'grid',
+      gridTemplateColumns: '1fr 300px',
+      gap: '1.5rem',
+      alignItems: 'start'
+    }}>
 
-      {loading ? (
-        <p style={{ textAlign: 'center', color: 'var(--text2)', padding: '2rem' }}>
-          Loading feed...
-        </p>
-      ) : posts.length === 0 ? (
-        <>
-          <SuggestedAccounts onFollow={handleFollow} />
+      {/* Left — main feed */}
+      <div>
+        <PostForm onPost={handleNewPost} />
+
+        {loading ? (
+          <p style={{ textAlign: 'center', color: 'var(--text2)', padding: '2rem' }}>
+            Loading feed...
+          </p>
+        ) : posts.length === 0 ? (
           <div style={{
             background: 'var(--surface)',
             border: '1px solid var(--border)',
@@ -66,31 +72,37 @@ export default function Feed() {
               Your feed is empty
             </p>
             <p style={{ color: 'var(--text2)', fontSize: 14 }}>
-              Follow some accounts above to see their posts here.
+              Follow some accounts on the right to see their posts here.
             </p>
           </div>
-        </>
-      ) : (
-        <>
-          {posts.map(post => (
-            <PostCard key={post.id} post={post} onDelete={handleDelete} />
-          ))}
-          {hasMore && (
-            <button
-              onClick={() => loadFeed(page + 1)}
-              style={{
-                width: '100%', background: 'var(--surface)',
-                border: '1px solid var(--border)', borderRadius: 8,
-                padding: '0.75rem', color: 'var(--accent)',
-                fontSize: 14, fontWeight: 500, marginTop: 8,
-                cursor: 'pointer'
-              }}
-            >
-              Load more
-            </button>
-          )}
-        </>
-      )}
+        ) : (
+          <>
+            {posts.map(post => (
+              <PostCard key={post.id} post={post} onDelete={handleDelete} />
+            ))}
+            {hasMore && (
+              <button
+                onClick={() => loadFeed(page + 1)}
+                style={{
+                  width: '100%', background: 'var(--surface)',
+                  border: '1px solid var(--border)', borderRadius: 8,
+                  padding: '0.75rem', color: 'var(--accent)',
+                  fontSize: 14, fontWeight: 500, marginTop: 8,
+                  cursor: 'pointer'
+                }}
+              >
+                Load more
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Right — sidebar */}
+      <div style={{ position: 'sticky', top: 72 }}>
+        <SuggestedAccounts onFollow={handleFollow} />
+      </div>
+
     </div>
   );
 }

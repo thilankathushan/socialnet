@@ -3,13 +3,6 @@ import { Link } from 'react-router-dom';
 import Avatar from './Avatar';
 import api from '../api';
 
-const CATEGORIES = [
-  { id: 'tech',    label: 'Tech News',    emoji: '💻' },
-  { id: 'sports',  label: 'Sports',       emoji: '⚽' },
-  { id: 'science', label: 'Science',      emoji: '🔬' },
-  { id: 'world',   label: 'World News',   emoji: '🌍' },
-];
-
 export default function SuggestedAccounts({ onFollow }) {
   const [suggestions, setSuggestions] = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -23,16 +16,7 @@ export default function SuggestedAccounts({ onFollow }) {
       const res = await api.get('/users/suggestions');
       setSuggestions(res.data.users);
     } catch {
-      // Fallback to static suggestions if API fails
-      setSuggestions(CATEGORIES.map(cat => ({
-        id: cat.id,
-        username: cat.id + '_news',
-        bio: cat.label,
-        avatar_url: '',
-        emoji: cat.emoji,
-        is_following: false,
-        isStatic: true
-      })));
+      setSuggestions([]);
     } finally {
       setLoading(false);
     }
@@ -53,8 +37,17 @@ export default function SuggestedAccounts({ onFollow }) {
     }
   }
 
-  if (loading) return null;
-  if (suggestions.length === 0) return null;
+  if (loading) return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius)',
+      padding: '1rem',
+      boxShadow: 'var(--shadow)'
+    }}>
+      <p style={{ fontSize: 13, color: 'var(--text2)' }}>Loading suggestions...</p>
+    </div>
+  );
 
   return (
     <div style={{
@@ -62,70 +55,94 @@ export default function SuggestedAccounts({ onFollow }) {
       border: '1px solid var(--border)',
       borderRadius: 'var(--radius)',
       padding: '1rem',
-      marginBottom: 16,
       boxShadow: 'var(--shadow)'
     }}>
       <p style={{
-        fontSize: 13, fontWeight: 600,
+        fontSize: 12, fontWeight: 600,
         color: 'var(--text2)', marginBottom: 12,
         textTransform: 'uppercase', letterSpacing: '0.05em'
       }}>
-        Suggested accounts
+        {suggestions.length > 0 ? 'Suggested for you' : 'Who to follow'}
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {suggestions.slice(0, 5).map(user => (
-          <div key={user.username} style={{
-            display: 'flex', alignItems: 'center', gap: 10
+
+      {suggestions.length === 0 ? (
+        <div>
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 10 }}>
+            You're following everyone! Check out the Explore page to find more people.
+          </p>
+          <Link to="/explore" style={{
+            fontSize: 13, color: 'var(--accent)', fontWeight: 500
           }}>
-            <Link to={`/profile/${user.username}`}>
-              <Avatar src={user.avatar_url} username={user.username} size={38} />
-            </Link>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            Go to Explore →
+          </Link>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {suggestions.map(user => (
+            <div key={user.username} style={{
+              display: 'flex', alignItems: 'center', gap: 10
+            }}>
               <Link to={`/profile/${user.username}`}>
-                <p style={{
-                  fontSize: 13, fontWeight: 600,
-                  color: 'var(--text)',
-                  whiteSpace: 'nowrap', overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {user.username}
-                </p>
+                <Avatar src={user.avatar_url} username={user.username} size={38} />
               </Link>
-              {user.bio && (
-                <p style={{
-                  fontSize: 12, color: 'var(--text2)',
-                  whiteSpace: 'nowrap', overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {user.bio}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Link to={`/profile/${user.username}`}>
+                  <p style={{
+                    fontSize: 13, fontWeight: 600,
+                    color: 'var(--text)',
+                    whiteSpace: 'nowrap', overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {user.username}
+                  </p>
+                </Link>
+                {user.bio && (
+                  <p style={{
+                    fontSize: 12, color: 'var(--text2)',
+                    whiteSpace: 'nowrap', overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {user.bio}
+                  </p>
+                )}
+                <p style={{ fontSize: 11, color: 'var(--text2)' }}>
+                  {user.followers_count} follower{user.followers_count !== 1 ? 's' : ''}
                 </p>
+              </div>
+              {!user.is_following ? (
+                <button
+                  onClick={() => handleFollow(user.username)}
+                  style={{
+                    background: 'var(--accent)', color: '#fff',
+                    border: 'none', borderRadius: 20,
+                    padding: '5px 14px', fontSize: 12,
+                    fontWeight: 600, flexShrink: 0, cursor: 'pointer'
+                  }}
+                >
+                  Follow
+                </button>
+              ) : (
+                <span style={{
+                  fontSize: 12, color: 'var(--success)',
+                  padding: '4px 8px', flexShrink: 0
+                }}>
+                  ✓ Following
+                </span>
               )}
             </div>
-            {!user.is_following && (
-              <button
-                onClick={() => handleFollow(user.username)}
-                style={{
-                  background: 'var(--accent)', color: '#fff',
-                  border: 'none', borderRadius: 20,
-                  padding: '4px 14px', fontSize: 12,
-                  fontWeight: 600, flexShrink: 0,
-                  cursor: 'pointer'
-                }}
-              >
-                Follow
-              </button>
-            )}
-            {user.is_following && (
-              <span style={{
-                fontSize: 12, color: 'var(--text2)',
-                padding: '4px 10px'
-              }}>
-                Following ✓
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {suggestions.length > 0 && (
+        <Link to="/explore" style={{
+          display: 'block', marginTop: 12,
+          fontSize: 12, color: 'var(--accent)',
+          fontWeight: 500
+        }}>
+          See more →
+        </Link>
+      )}
     </div>
   );
 }
