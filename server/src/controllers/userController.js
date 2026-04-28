@@ -261,9 +261,6 @@ async function searchUsers(req, res) {
 async function getSuggestions(req, res) {
   try {
     const userId = req.user.id;
-
-    // Get users the current user doesn't follow yet
-    // excluding themselves, ordered by most followers
     const result = await db.query(
       `SELECT u.id, u.username, u.bio, u.avatar_url,
               COUNT(DISTINCT f.id)::int AS followers_count,
@@ -279,7 +276,6 @@ async function getSuggestions(req, res) {
        LIMIT 5`,
       [userId]
     );
-
     res.json({ users: result.rows });
   } catch (error) {
     console.error('Suggestions error:', error);
@@ -287,7 +283,13 @@ async function getSuggestions(req, res) {
   }
 }
 
-module.exports = {
-  getProfile, updateProfile, toggleFollow, searchUsers,
-  updateAccount, changePassword, deleteAccount, getSuggestions
+mmodule.exports = {
+  getProfile,
+  updateProfile,
+  toggleFollow,
+  searchUsers,
+  updateAccount,
+  changePassword,
+  deleteAccount,
+  getSuggestions
 };
