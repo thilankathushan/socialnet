@@ -10,7 +10,6 @@ import Profile  from './pages/Profile';
 import AccountSettings from './pages/AccountSettings';
 import ForgotPassword  from './pages/ForgotPassword';
 import ResetPassword   from './pages/ResetPassword';
-import AccountSettings from './pages/AccountSettings';
 
 
 function PrivateRoute({ children }) {
