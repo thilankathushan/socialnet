@@ -6,9 +6,11 @@ const path    = require('path');
 const authRoutes = require('./routes/authRoutes');
 const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
-
 const app  = express();
 const PORT = process.env.PORT || 5000;
+const botRoutes = require('./routes/botRoutes');
+
+app.use('/api/bot', botRoutes);
 
 app.use(cors({
   origin: function(origin, callback) {

@@ -147,17 +147,6 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              {/* Settings */}
-              <Link to="/settings" style={{
-                fontSize: 14, fontWeight: isActive('/settings') ? 600 : 400,
-                color: isActive('/settings') ? 'var(--accent)' : 'var(--text2)',
-                padding: '6px 14px', borderRadius: 8,
-                background: isActive('/settings') ? 'var(--accent-light)' : 'transparent',
-                transition: 'all 0.15s'
-              }}>
-                Settings
-              </Link>
-
               {/* Profile */}
               <Link
                 to={`/profile/${user.username}`}
