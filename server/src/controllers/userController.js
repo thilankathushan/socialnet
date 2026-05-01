@@ -283,7 +283,7 @@ async function getSuggestions(req, res) {
   }
 }
 
-mmodule.exports = {
+module.exports = {
   getProfile,
   updateProfile,
   toggleFollow,
