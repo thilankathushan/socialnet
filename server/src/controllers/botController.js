@@ -1,13 +1,7 @@
 const db      = require('../db');
-const bcrypt  = require('bcryptjs');
-const jwt     = require('jsonwebtoken');
 const axios   = require('axios');
 require('dotenv').config();
 
-// ─────────────────────────────────────────
-// BOT ACCOUNTS CONFIG
-// These must match the accounts you registered
-// ─────────────────────────────────────────
 const BOT_ACCOUNTS = [
   {
     email:    'tech_updates@socialnet.com',
@@ -26,9 +20,6 @@ const BOT_ACCOUNTS = [
   }
 ];
 
-// ─────────────────────────────────────────
-// FETCH CONTENT FOR EACH BOT TYPE
-// ─────────────────────────────────────────
 async function fetchContent(type) {
   try {
     if (type === 'tech') {
@@ -37,7 +28,10 @@ async function fetchContent(type) {
       );
       const article = res.data.articles[0];
       if (!article) return null;
-      return `📱 ${article.title}\n\n${article.description || ''}\n\n🔗 ${article.url}`.slice(0, 500);
+      return {
+        content:  `📱 ${article.title}\n\n${article.description || ''}\n\n🔗 ${article.url}`.slice(0, 500),
+        imageUrl: article.urlToImage || ''
+      };
     }
 
     if (type === 'world') {
@@ -46,14 +40,19 @@ async function fetchContent(type) {
       );
       const article = res.data.articles[0];
       if (!article) return null;
-      return `🌍 ${article.title}\n\n${article.description || ''}\n\n🔗 ${article.url}`.slice(0, 500);
+      return {
+        content:  `🌍 ${article.title}\n\n${article.description || ''}\n\n🔗 ${article.url}`.slice(0, 500),
+        imageUrl: article.urlToImage || ''
+      };
     }
 
     if (type === 'quotes') {
-      // Free API — no key needed
       const res = await axios.get('https://api.adviceslip.com/advice');
       const advice = res.data.slip.advice;
-      return `💡 "${advice}"`;
+      return {
+        content:  `💡 "${advice}"`,
+        imageUrl: ''
+      };
     }
   } catch (err) {
     console.error(`Failed to fetch content for ${type}:`, err.message);
@@ -61,9 +60,6 @@ async function fetchContent(type) {
   }
 }
 
-// ─────────────────────────────────────────
-// GET BOT USER ID BY EMAIL
-// ─────────────────────────────────────────
 async function getBotUserId(email) {
   const result = await db.query(
     'SELECT id FROM users WHERE email = $1',
@@ -72,22 +68,14 @@ async function getBotUserId(email) {
   return result.rows[0]?.id || null;
 }
 
-// ─────────────────────────────────────────
-// CREATE POST AS BOT
-// ─────────────────────────────────────────
-async function createBotPost(userId, content) {
+async function createBotPost(userId, content, imageUrl = '') {
   await db.query(
-    'INSERT INTO posts (user_id, content) VALUES ($1, $2)',
-    [userId, content]
+    'INSERT INTO posts (user_id, content, image_url) VALUES ($1, $2, $3)',
+    [userId, content, imageUrl]
   );
 }
 
-// ─────────────────────────────────────────
-// MAIN BOT RUNNER
-// Called by the cron job endpoint
-// ─────────────────────────────────────────
 async function runBots(req, res) {
-  // Check the secret to prevent unauthorised calls
   const secret = req.headers['x-bot-secret'] || req.body.secret;
   if (secret !== process.env.BOT_SECRET) {
     return res.status(401).json({ error: 'Unauthorised' });
@@ -109,8 +97,8 @@ async function runBots(req, res) {
         continue;
       }
 
-      await createBotPost(userId, content);
-      results.push({ type: bot.type, status: 'posted', preview: content.slice(0, 60) });
+      await createBotPost(userId, content.content, content.imageUrl);
+      results.push({ type: bot.type, status: 'posted', preview: content.content.slice(0, 60) });
 
     } catch (err) {
       results.push({ type: bot.type, status: 'error', error: err.message });
