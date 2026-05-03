@@ -10,6 +10,8 @@ import Profile         from './pages/Profile';
 import AccountSettings from './pages/AccountSettings';
 import ForgotPassword  from './pages/ForgotPassword';
 import ResetPassword   from './pages/ResetPassword';
+import BottomNav from './components/BottomNav';
+
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -23,20 +25,26 @@ function PublicRoute({ children }) {
 
 function AppRoutes() {
   const { user } = useAuth();
+  const isMobile = window.innerWidth < 768;
+
   return (
     <>
-      {user && <Navbar />}
-      <Routes>
-        <Route path="/login"           element={<PublicRoute><Login /></PublicRoute>} />
-        <Route path="/register"        element={<PublicRoute><Register /></PublicRoute>} />
-        <Route path="/"                element={<PrivateRoute><Feed /></PrivateRoute>} />
-        <Route path="/explore"         element={<PrivateRoute><Explore /></PrivateRoute>} />
-        <Route path="/profile/:username" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/settings"        element={<PrivateRoute><AccountSettings /></PrivateRoute>} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password"  element={<ResetPassword />} />
-        <Route path="*"                element={<Navigate to="/" />} />
-      </Routes>
+      {user && !isMobile && <Navbar />}
+      {user && isMobile  && <Navbar />}
+      <div style={{ paddingBottom: isMobile && user ? 56 : 0 }}>
+        <Routes>
+          <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/"         element={<PrivateRoute><Feed /></PrivateRoute>} />
+          <Route path="/explore"  element={<PrivateRoute><Explore /></PrivateRoute>} />
+          <Route path="/profile/:username" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/settings" element={<PrivateRoute><AccountSettings /></PrivateRoute>} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password"  element={<ResetPassword />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
+      {user && isMobile && <BottomNav />}
     </>
   );
 }

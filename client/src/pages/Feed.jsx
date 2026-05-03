@@ -1,14 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
-import PostCard           from '../components/PostCard';
-import PostForm           from '../components/PostForm';
-import SuggestedAccounts  from '../components/SuggestedAccounts';
-import api                from '../api';
+import PostCard          from '../components/PostCard';
+import PostForm          from '../components/PostForm';
+import SuggestedAccounts from '../components/SuggestedAccounts';
+import api               from '../api';
 
 export default function Feed() {
-  const [posts,   setPosts]   = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page,    setPage]    = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [posts,    setPosts]   = useState([]);
+  const [loading,  setLoading] = useState(true);
+  const [page,     setPage]    = useState(1);
+  const [hasMore,  setHasMore] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    function handleResize() { setIsMobile(window.innerWidth < 768); }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadFeed = useCallback(async (pageNum) => {
     try {
@@ -29,24 +36,16 @@ export default function Feed() {
 
   useEffect(() => { loadFeed(1); }, [loadFeed]);
 
-  function handleNewPost(post) {
-    setPosts(prev => [post, ...prev]);
-  }
-
-  function handleDelete(postId) {
-    setPosts(prev => prev.filter(p => p.id !== postId));
-  }
-
-  function handleFollow() {
-    loadFeed(1);
-  }
+  function handleNewPost(post) { setPosts(prev => [post, ...prev]); }
+  function handleDelete(postId) { setPosts(prev => prev.filter(p => p.id !== postId)); }
+  function handleFollow() { setLoading(true); loadFeed(1); }
 
   return (
     <div style={{
       maxWidth: 1000, margin: '0 auto',
-      padding: '1.5rem 1rem',
+      padding: isMobile ? '1rem 0.75rem' : '1.5rem 1rem',
       display: 'grid',
-      gridTemplateColumns: '1fr 300px',
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 300px',
       gap: '1.5rem',
       alignItems: 'start'
     }}>
@@ -54,6 +53,13 @@ export default function Feed() {
       {/* Left — main feed */}
       <div>
         <PostForm onPost={handleNewPost} />
+
+        {/* Suggestions on mobile — shown above feed */}
+        {isMobile && (
+          <div style={{ marginBottom: 12 }}>
+            <SuggestedAccounts onFollow={handleFollow} />
+          </div>
+        )}
 
         {loading ? (
           <p style={{ textAlign: 'center', color: 'var(--text2)', padding: '2rem' }}>
@@ -72,7 +78,7 @@ export default function Feed() {
               Your feed is empty
             </p>
             <p style={{ color: 'var(--text2)', fontSize: 14 }}>
-              Follow some accounts on the right to see their posts here.
+              Follow some accounts above to see their posts here.
             </p>
           </div>
         ) : (
@@ -98,11 +104,12 @@ export default function Feed() {
         )}
       </div>
 
-      {/* Right — sidebar */}
-      <div style={{ position: 'sticky', top: 72 }}>
-        <SuggestedAccounts onFollow={handleFollow} />
-      </div>
-
+      {/* Right sidebar — desktop only */}
+      {!isMobile && (
+        <div style={{ position: 'sticky', top: 72 }}>
+          <SuggestedAccounts onFollow={handleFollow} />
+        </div>
+      )}
     </div>
   );
 }

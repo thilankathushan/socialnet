@@ -1,12 +1,12 @@
-import { useState }    from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth }     from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
-  const { register }  = useAuth();
-  const navigate      = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
-  const [error, setError] = useState('');
+  const { register } = useAuth();
+  const navigate     = useNavigate();
+  const [form, setForm]     = useState({ username: '', email: '', password: '' });
+  const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
@@ -24,26 +24,36 @@ export default function Register() {
   }
 
   const inputStyle = {
-    width: '100%', background: '#f7f6f3',
-    border: '1px solid var(--border)', borderRadius: 8,
-    padding: '0.75rem 1rem', fontSize: 14,
-    color: 'var(--text)', outline: 'none', marginBottom: 12
+    width: '100%',
+    background: 'var(--surface2)',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    padding: '10px 14px',
+    fontSize: 15,
+    color: 'var(--text)',
+    outline: 'none',
+    marginBottom: 12
   };
 
   return (
     <div style={{
       minHeight: '100vh', display: 'flex',
-      alignItems: 'center', justifyContent: 'center', padding: '1rem'
+      alignItems: 'center', justifyContent: 'center',
+      padding: '1rem', background: 'var(--bg)'
     }}>
       <div style={{
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 380
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 16,
+        padding: 'clamp(1.25rem, 5vw, 2rem)',
+        width: '100%', maxWidth: 400,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.08)'
       }}>
         <h1 style={{
-          fontSize: '1.4rem', fontWeight: 700,
+          fontSize: '1.5rem', fontWeight: 700,
           color: 'var(--accent)', marginBottom: 4
         }}>
-          SocialNet
+          🌐 SocialNet
         </h1>
         <p style={{ color: 'var(--text2)', fontSize: 14, marginBottom: '1.5rem' }}>
           Create your account
@@ -53,8 +63,7 @@ export default function Register() {
           <input
             value={form.username}
             onChange={e => setForm({...form, username: e.target.value})}
-            placeholder="Username"
-            required style={inputStyle}
+            placeholder="Username" required style={inputStyle}
           />
           <input
             type="email" value={form.email}
@@ -75,13 +84,14 @@ export default function Register() {
           <button type="submit" disabled={loading} style={{
             width: '100%', background: 'var(--accent)',
             color: '#fff', border: 'none', borderRadius: 8,
-            padding: '0.75rem', fontSize: 15, fontWeight: 600
+            padding: '0.85rem', fontSize: 15, fontWeight: 600,
+            cursor: 'pointer'
           }}>
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text2)', marginTop: 16 }}>
+        <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text2)', marginTop: 16 }}>
           Already have an account?{' '}
           <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 500 }}>
             Log in

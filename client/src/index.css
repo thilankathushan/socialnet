@@ -40,3 +40,8 @@ a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 input, textarea { font-family: inherit; }
 img { display: block; max-width: 100%; }
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+}
